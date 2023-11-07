@@ -1,0 +1,40 @@
+{
+	"schemaVersion": 1,
+	"id": "bundle_pots",
+	"version": "${version}",
+	"name": "Tutorial",
+	"description": "The pots are usable as an replacement for bundles, that means, they can contain up to one stack worth of items, an arbitrary number of different items. When you break them so they don't shatter, they retain their content.",
+	"authors": [
+		"GuiTaek"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "MIT",
+	"icon": "assets/bundlepots/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"guitaek.bundlepots.BundlePots"
+		],
+		"client": [
+			"guitaek.bundlepots.BundlePotsClient"
+		],
+		"fabric-datagen": [
+			"guitaek.bundlepots.BundlePotsDataGenerator"
+		]
+	},
+	"mixins": [
+		"bundlepots.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.14.24",
+		"minecraft": "~1.20.3-alpha.23.44.a",
+		"java": ">=17",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}

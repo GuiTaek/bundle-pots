@@ -1,0 +1,14 @@
+{
+	"required": true,
+	"package": "guitaek.bundlepots.mixin",
+	"compatibilityLevel": "JAVA_17",
+	"mixins": [
+		"ExampleMixin",
+		"BundlePotBlock",
+		"BundlePotBlockEntity",
+		"BundlePotDropMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
