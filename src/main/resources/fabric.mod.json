@@ -2,7 +2,7 @@
 	"schemaVersion": 1,
 	"id": "bundle_pots",
 	"version": "${version}",
-	"name": "Tutorial",
+	"name": "bundle pots",
 	"description": "The pots are usable as an replacement for bundles, that means, they can contain up to one stack worth of items, an arbitrary number of different items. When you break them so they don't shatter, they retain their content.",
 	"authors": [
 		"GuiTaek"
