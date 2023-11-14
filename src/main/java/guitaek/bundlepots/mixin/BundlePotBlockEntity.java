@@ -71,7 +71,6 @@ public class BundlePotBlockEntity
         int bundleOcc = this.getTotalOccupancy();
         int itemOcc = getItemOccupancy(stack);
         int space = (64 - bundleOcc) / itemOcc;
-        Logger.getLogger("BundlePots").warning(String.format("bundleOcc=%d, itemOcc=%d, space=%d", bundleOcc, itemOcc, space));
         return space > 0;
     }
     public void addItem(ItemStack stack) {
@@ -99,9 +98,6 @@ public class BundlePotBlockEntity
     public void readNbtFromStackTail(ItemStack stack, CallbackInfo info) {
         if(stack.getNbt() != null) {
             this.readNbt(BlockItem.getBlockEntityNbt(stack));
-            Logger.getAnonymousLogger().warning(stack.getNbt().toString());
-        } else {
-            Logger.getAnonymousLogger().warning("is null");
         }
     }
 

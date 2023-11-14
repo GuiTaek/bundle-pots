@@ -58,7 +58,6 @@ public class BundlePotBlock extends BlockWithEntity implements Waterloggable {
         } else {
             IBundlePotBlockEntity bundlePotBlockEntity = (IBundlePotBlockEntity) (Object) decoratedPotBlockEntity;
             ItemStack itemStack = player.getStackInHand(hand);
-            Logger.getLogger("BundlePots").warning(itemStack.getItem().getTranslationKey());
             if (!itemStack.isEmpty() && bundlePotBlockEntity.isAddable(itemStack)) {
                 decoratedPotBlockEntity.wobble(DecoratedPotBlockEntity.WobbleType.POSITIVE);
                 player.incrementStat(Stats.USED.getOrCreateStat(itemStack.getItem()));
