@@ -8,11 +8,11 @@
 		"GuiTaek"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"homepage": "https://modrinth.com/mod/bundle-pots/versions",
+		"sources": "https://github.com/GuiTaek/bundle-pots"
 	},
 	"license": "MIT",
-	"icon": "assets/bundlepots/icon.png",
+	"icon": "assets/bundlepots/images/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
@@ -33,8 +33,5 @@
 		"minecraft": "~1.20.3-alpha.23.44.a",
 		"java": ">=17",
 		"fabric-api": "*"
-	},
-	"suggests": {
-		"another-mod": "*"
 	}
 }
