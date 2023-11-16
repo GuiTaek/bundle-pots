@@ -18,9 +18,6 @@
 		"main": [
 			"guitaek.bundlepots.BundlePots"
 		],
-		"client": [
-			"guitaek.bundlepots.BundlePotsClient"
-		],
 		"fabric-datagen": [
 			"guitaek.bundlepots.BundlePotsDataGenerator"
 		]
