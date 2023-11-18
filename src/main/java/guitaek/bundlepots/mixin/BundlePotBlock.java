@@ -1,26 +1,21 @@
 package guitaek.bundlepots.mixin;
 
 import com.mojang.serialization.MapCodec;
+import guitaek.BundlePotCalculator;
 import guitaek.access.IBundlePotBlockEntity;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.entity.DecoratedPotBlockEntity;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.loot.context.LootContext;
-import net.minecraft.loot.context.LootContextParameter;
 import net.minecraft.loot.context.LootContextParameterSet;
 import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -29,8 +24,6 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Position;
 import net.minecraft.world.World;
 import net.minecraft.world.event.GameEvent;
 import org.jetbrains.annotations.Nullable;
@@ -43,7 +36,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 @Mixin(DecoratedPotBlock.class)
 public class BundlePotBlock extends BlockWithEntity implements Waterloggable {
@@ -63,7 +55,9 @@ public class BundlePotBlock extends BlockWithEntity implements Waterloggable {
                 player.incrementStat(Stats.USED.getOrCreateStat(itemStack.getItem()));
                 ItemStack toGive = player.isCreative() ? itemStack.copyWithCount(1) : itemStack.split(1);
                 bundlePotBlockEntity.addItem(toGive);
-                float pitch = (float)bundlePotBlockEntity.getTotalOccupancy() / 64;
+                NbtCompound nbt = new NbtCompound();
+                bundlePotBlockEntity.writeNbt(nbt);
+                float pitch = (float) BundlePotCalculator.getTotalContentSize(nbt) / 64;
 
                 world.playSound((PlayerEntity)null, pos, SoundEvents.BLOCK_DECORATED_POT_INSERT, SoundCategory.BLOCKS, 1.0F, 0.7F + 0.5F * pitch);
                 if (world instanceof ServerWorld) {

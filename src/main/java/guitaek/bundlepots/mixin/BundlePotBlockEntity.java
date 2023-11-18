@@ -1,36 +1,25 @@
 package guitaek.bundlepots.mixin;
 
+import guitaek.BundlePotCalculator;
 import guitaek.access.IBundlePotBlockEntity;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.DecoratedPotBlock;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.entity.DecoratedPotBlockEntity;
 import net.minecraft.inventory.LootableInventory;
 import net.minecraft.inventory.SingleStackInventory;
 import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.loot.context.LootContextParameterSet;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.text.MessageFormat;
-import java.util.List;
-import java.util.function.Function;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.ArrayList;
 import java.util.Optional;
 
@@ -68,10 +57,12 @@ public class BundlePotBlockEntity
 
     }
     public boolean isAddable(ItemStack stack) {
-        int bundleOcc = this.getTotalOccupancy();
-        int itemOcc = getItemOccupancy(stack);
-        int space = (64 - bundleOcc) / itemOcc;
-        return space > 0;
+        NbtCompound nbt = new NbtCompound();
+        this.writeNbt(nbt);
+        int potSize = BundlePotCalculator.getTotalContentSize(nbt);
+        int itemSize = BundlePotCalculator.getResultingItemSize(stack);
+        int space = 64 - potSize - itemSize;
+        return space >= 0;
     }
     public void addItem(ItemStack stack) {
         if (!this.isAddable(stack)) {
@@ -90,7 +81,7 @@ public class BundlePotBlockEntity
         super.readNbt(nbt);
         this.sherds = DecoratedPotBlockEntity.Sherds.fromNbt(nbt);
         if (!this.readLootTable(nbt)) {
-            this.stacks = getStacksFromNbt(nbt);
+            this.stacks = new ArrayList<>(BundlePotCalculator.getStacksFromNbt(nbt));
         }
     }
 
@@ -110,35 +101,11 @@ public class BundlePotBlockEntity
         info.setReturnValue(stack);
     }
     // all following methods are scraped from bundle and what I don't find good is deleted
-    private static int getItemOccupancy(ItemStack stack) {
-        return 64 / stack.getMaxCount();
-    }
-    public int getTotalOccupancy() {
-        return this.stacks.stream().mapToInt((itemStack) -> {
-            return getItemOccupancy(itemStack) * itemStack.getCount();
-        }).sum();
-    }
-
     @Override
     public ArrayList<ItemStack> getStacks() {
         return this.stacks;
     }
 
-    private ArrayList<ItemStack> getStacksFromNbt(NbtCompound nbtCompound) {
-        if (nbtCompound == null) {
-            return new ArrayList<>();
-        } else {
-            NbtList nbtList = nbtCompound.getList("Items", 10);
-            Stream<NbtElement> var10000 = nbtList.stream();
-            return var10000.map((Function<NbtElement, NbtCompound>) element -> {
-                if (element instanceof NbtCompound) {
-                    return (NbtCompound) element;
-                } else {
-                    throw new IllegalStateException("element in nbt-list isn't a NbtCompound" + element);
-                }
-            }).map(ItemStack::fromNbt).collect(Collectors.toCollection(ArrayList<ItemStack>::new));
-        }
-    }
 
     private Optional<ItemStack> canMergeStack(ItemStack newStack) {
         return this.stacks.stream().filter((item) -> {

@@ -9,7 +9,6 @@ import java.util.ArrayList;
 public interface IBundlePotBlockEntity {
     boolean isAddable(ItemStack stack);
     void addItem(ItemStack item);
-    int getTotalOccupancy();
     ArrayList<ItemStack> getStacks();
     void writeNbt(NbtCompound nbt);
 }
