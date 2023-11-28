@@ -68,21 +68,22 @@ public class BundlePotBlockEntity
     @Shadow public void setLootTableId(@Nullable Identifier lootTableId) { }
     @Shadow public long getLootTableSeed() { return 0; }
     @Shadow public void setLootTableSeed(long lootTableSeed) { }
-    public void writeNbt(NbtCompound nbt) {
-        super.writeNbt(nbt);
-        this.sherds.toNbt(nbt);
-        NbtList nbtList = new NbtList();
-        this.stacks.forEach((stack) -> {
-            NbtCompound nbtToAdd = new NbtCompound();
-            stack.writeNbt(nbtToAdd);
-            nbtList.add(0, nbtToAdd);
-        });
-
+    @Shadow public void writeNbt(NbtCompound nbt) { }
+    @Inject(method = "writeNbt", at = @At("TAIL"))
+    public void writeNbtTail(NbtCompound nbt, CallbackInfo info) {
         if (!this.writeLootTable(nbt) && !this.stacks.isEmpty()) {
+            NbtList nbtList = new NbtList();
+            this.stacks.forEach((stack) -> {
+                NbtCompound nbtToAdd = new NbtCompound();
+                stack.writeNbt(nbtToAdd);
+                nbtList.add(0, nbtToAdd);
+            });
             nbt.put("Items", nbtList);
         }
 
     }
+    @Inject(method = "readNbt", at = @At("TAIL"))
+    public void readNbtTail(NbtCompound nbt, CallbackInfo info) {
         if (!this.readLootTable(nbt)) {
             this.stacks = new ArrayList<>(BundlePotCalculator.getStacksFromNbt(nbt));
         }
