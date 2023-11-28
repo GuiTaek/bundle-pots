@@ -45,6 +45,17 @@ public class BundlePotBlock extends BlockWithEntity implements Waterloggable {
         super(null);
         throw new AssertionError("this constructor shall not be called");
     }
+    private void showFail(World world, BlockPos pos, DecoratedPotBlockEntity decoratedPotBlockEntity) {
+        world.playSound((PlayerEntity)null, pos, SoundEvents.BLOCK_DECORATED_POT_INSERT_FAIL, SoundCategory.BLOCKS, 1.0F, 1.0F);
+        decoratedPotBlockEntity.wobble(DecoratedPotBlockEntity.WobbleType.NEGATIVE);
+    }
+    private void showSuccess(World world, BlockPos pos, float pitch) {
+        world.playSound((PlayerEntity)null, pos, SoundEvents.BLOCK_DECORATED_POT_INSERT, SoundCategory.BLOCKS, 1.0F, 0.7F + 0.5F * pitch);
+        if (world instanceof ServerWorld) {
+            ServerWorld serverWorld = (ServerWorld)world;
+            serverWorld.spawnParticles(ParticleTypes.DUST_PLUME, (double)pos.getX() + 0.5, (double)pos.getY() + 1.2, (double)pos.getZ() + 0.5, 7, 0.0, 0.0, 0.0, 0.0);
+        }
+    }
     public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         BlockEntity entity = world.getBlockEntity(pos);
         if (!(entity instanceof DecoratedPotBlockEntity decoratedPotBlockEntity)) {
@@ -52,25 +63,25 @@ public class BundlePotBlock extends BlockWithEntity implements Waterloggable {
         } else {
             BundleInventory bundleInventory = (BundleInventory) (Object) decoratedPotBlockEntity;
             ItemStack itemStack = player.getStackInHand(hand);
-            if (!itemStack.isEmpty() && bundlePotBlockEntity.isAddable(itemStack)) {
+            if (!itemStack.isEmpty()) {
                 decoratedPotBlockEntity.wobble(DecoratedPotBlockEntity.WobbleType.POSITIVE);
                 player.incrementStat(Stats.USED.getOrCreateStat(itemStack.getItem()));
                 ItemStack toGive = player.isCreative() ? itemStack.copyWithCount(1) : itemStack.split(1);
-                bundleInventory.addItem(toGive);
-                NbtCompound nbt = new NbtCompound();
-                bundleInventory.writeNbt(nbt);
-                float pitch = (float) BundlePotCalculator.getTotalContentSize(nbt) / 64;
-
-                world.playSound((PlayerEntity)null, pos, SoundEvents.BLOCK_DECORATED_POT_INSERT, SoundCategory.BLOCKS, 1.0F, 0.7F + 0.5F * pitch);
-                if (world instanceof ServerWorld) {
-                    ServerWorld serverWorld = (ServerWorld)world;
-                    serverWorld.spawnParticles(ParticleTypes.DUST_PLUME, (double)pos.getX() + 0.5, (double)pos.getY() + 1.2, (double)pos.getZ() + 0.5, 7, 0.0, 0.0, 0.0, 0.0);
+                if (bundleInventory.isAddable(toGive)) {
+                    bundleInventory.addItem(toGive);
+                    NbtCompound nbt = new NbtCompound();
+                    bundleInventory.writeNbt(nbt);
+                    float pitch = (float) BundlePotCalculator.getTotalContentSize(nbt) / 64;
+                    this.showSuccess(world, pos, pitch);
+                    world.updateComparators(pos, this);
+                } else {
+                    if (!player.isCreative()) {
+                        itemStack.increment(toGive.getCount());
+                    }
+                    this.showFail(world, pos, decoratedPotBlockEntity);
                 }
-
-                world.updateComparators(pos, this);
             } else {
-                world.playSound((PlayerEntity)null, pos, SoundEvents.BLOCK_DECORATED_POT_INSERT_FAIL, SoundCategory.BLOCKS, 1.0F, 1.0F);
-                decoratedPotBlockEntity.wobble(DecoratedPotBlockEntity.WobbleType.NEGATIVE);
+                this.showFail(world, pos, decoratedPotBlockEntity);
             }
 
             world.emitGameEvent(player, GameEvent.BLOCK_CHANGE, pos);
