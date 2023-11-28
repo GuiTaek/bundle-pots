@@ -22,6 +22,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.stat.Stats;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.ItemScatterer;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -88,25 +89,20 @@ public class BundlePotBlock extends BlockWithEntity implements Waterloggable {
             return ActionResult.SUCCESS;
         }
     }
-
+    @Redirect(method = "onStateReplaced", at = @At(value="INVOKE",
+            target = "Lnet/minecraft/util/ItemScatterer;onStateReplaced(Lnet/minecraft/block/BlockState;Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)V"))
+    private void scatterOnShatter(BlockState state, BlockState newState, World world, BlockPos pos) {
+        if (state.get(DecoratedPotBlock.CRACKED)) {
+            ItemScatterer.onStateReplaced(state, newState, world, pos);
+        }
+    }
     @Inject(at = @At("HEAD"), method = "getDroppedStacks", cancellable = true)
     private void onGetDrops(BlockState state, LootContextParameterSet.Builder builder, CallbackInfoReturnable<List<ItemStack>> ci) {
         if (state.getBlock() == Blocks.DECORATED_POT) {
-            List<ItemStack> customDrops = new ArrayList<>();
-            BlockEntity blockEntity = builder.get(LootContextParameters.BLOCK_ENTITY);;
-            IBundlePotBlockEntity bundlePotBlockEntity = (IBundlePotBlockEntity)(Object)blockEntity;
-            if (state.get(DecoratedPotBlock.CRACKED)) {
-                for (ItemStack stack : bundlePotBlockEntity.getStacks()) {
-                    customDrops.add(stack);
-                }
-                if (blockEntity instanceof DecoratedPotBlockEntity decoratedPotBlockEntity) {
-                    decoratedPotBlockEntity.getSherds().stream().map(Item::getDefaultStack).forEach((stack) -> {
-                        customDrops.add(stack);
-                    });
-                }
-                ci.setReturnValue(customDrops);
-                ci.cancel();
-            } else {
+            if (!state.get(DecoratedPotBlock.CRACKED)) {
+                List<ItemStack> customDrops = new ArrayList<>();
+                BlockEntity blockEntity = builder.get(LootContextParameters.BLOCK_ENTITY);
+                BundleInventory bundleInventory = (BundleInventory) (Object)blockEntity;
                 DecoratedPotBlockEntity decoratedPotBlockEntity = (DecoratedPotBlockEntity)blockEntity;
                 ItemStack itemStack = DecoratedPotBlockEntity.getStackWith(decoratedPotBlockEntity.getSherds());;
                 NbtCompound nbt = new NbtCompound();
