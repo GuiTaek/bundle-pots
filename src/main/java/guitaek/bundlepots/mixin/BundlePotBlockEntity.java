@@ -7,6 +7,7 @@ import guitaek.bundlepots.access.IBundlePotBlockEntity;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.entity.DecoratedPotBlockEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.LootableInventory;
 import net.minecraft.inventory.SingleStackInventory;
 import net.minecraft.item.BlockItem;
@@ -14,6 +15,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.util.Identifier;
+import org.apache.commons.compress.harmony.pack200.NewAttributeBands;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -22,7 +24,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import javax.security.auth.callback.Callback;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 
