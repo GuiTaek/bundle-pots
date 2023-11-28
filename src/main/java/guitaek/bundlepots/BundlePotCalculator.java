@@ -14,23 +14,21 @@ import java.util.stream.Collectors;
 public class BundlePotCalculator {
     // unfortunately, you can't overwrite Item.getMaxCount, therefore I have to be creative
     public static int getResultingItemSize(ItemStack stack) {
-        if (stack.getItem() == Items.DECORATED_POT) {
-            NbtCompound stackNbt = stack.getNbt();
-            if (stackNbt == null) {
-                return 1;
-            }
-            NbtCompound entityNbt = stackNbt.getCompound("BlockEntityTag");
-            if (entityNbt == null) {
-                return 1;
-            }
-            return 1 + BundlePotCalculator.getTotalContentSize(entityNbt);
+        int firstResult = stack.getCount() * 64 / stack.getMaxCount();
+        NbtCompound stackNbt = stack.getNbt();
+        if (stackNbt == null) {
+            return firstResult;
         }
-        return 64 / stack.getMaxCount();
+        NbtCompound entityNbt = stackNbt.getCompound("BlockEntityTag");
+        if (entityNbt == null) {
+            return firstResult;
+        }
+        return firstResult + BundlePotCalculator.getTotalContentSize(entityNbt);
     }
     public static int getTotalContentSize(NbtCompound nbt) {
-        return BundlePotCalculator.getStacksFromNbt(nbt).stream().mapToInt((itemStack) -> {
-            return getResultingItemSize(itemStack) * itemStack.getCount();
-        }).sum();
+        return BundlePotCalculator.getStacksFromNbt(nbt).stream().mapToInt((itemStack) ->
+            getResultingItemSize(itemStack)
+        ).sum();
     }
 
     public static List<ItemStack> getStacksFromNbt(NbtCompound nbtCompound) {
