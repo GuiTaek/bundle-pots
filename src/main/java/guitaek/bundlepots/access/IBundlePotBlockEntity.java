@@ -1,4 +1,4 @@
-package guitaek.access;
+package guitaek.bundlepots.access;
 
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;

@@ -1,7 +1,7 @@
 package guitaek.bundlepots.mixin;
 
-import guitaek.BundlePotCalculator;
-import guitaek.access.IBundlePotBlockEntity;
+import guitaek.bundlepots.BundlePotCalculator;
+import guitaek.bundlepots.access.IBundlePotBlockEntity;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.entity.DecoratedPotBlockEntity;

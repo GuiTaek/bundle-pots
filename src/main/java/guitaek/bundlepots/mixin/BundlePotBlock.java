@@ -1,8 +1,9 @@
 package guitaek.bundlepots.mixin;
 
 import com.mojang.serialization.MapCodec;
-import guitaek.BundlePotCalculator;
-import guitaek.access.IBundlePotBlockEntity;
+import guitaek.bundlepots.BundleInventory;
+import guitaek.bundlepots.BundlePotCalculator;
+import guitaek.bundlepots.BundlePots;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
