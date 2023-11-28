@@ -1,14 +1,13 @@
 package guitaek.bundlepots.access;
 
-import net.minecraft.item.Item;
+import guitaek.bundlepots.BundleInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 
 import java.util.ArrayList;
+import java.util.List;
 
-public interface IBundlePotBlockEntity {
-    boolean isAddable(ItemStack stack);
-    void addItem(ItemStack item);
-    ArrayList<ItemStack> getStacks();
+public interface IBundlePotBlockEntity extends BundleInventory {
+    List<ItemStack> getStacks();
     void writeNbt(NbtCompound nbt);
 }

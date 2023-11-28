@@ -1,6 +1,8 @@
 package guitaek.bundlepots.mixin;
 
+import guitaek.bundlepots.BundleInventory;
 import guitaek.bundlepots.BundlePotCalculator;
+import guitaek.bundlepots.BundlePots;
 import guitaek.bundlepots.access.IBundlePotBlockEntity;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
@@ -22,13 +24,38 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 @Mixin(DecoratedPotBlockEntity.class)
 public class BundlePotBlockEntity
         extends BlockEntity
-        implements IBundlePotBlockEntity, LootableInventory, SingleStackInventory {
+        implements LootableInventory, BundleInventory {
+
+    private BundleInventory inventory;
+    public int size() { return this.inventory.size(); }
+    public boolean isEmpty() { return this.inventory.isEmpty(); }
+    public ItemStack getStack(int slot) { return this.inventory.getStack(slot); }
+    public ItemStack removeStack(int slot, int amount) { return this.inventory.removeStack(slot, amount); }
+    public ItemStack removeStack(int slot) { return this.inventory.removeStack(slot); }
+    public void setStack(int slot, ItemStack stack) { this.inventory.setStack(slot, stack); }
+    public boolean canPlayerUse(PlayerEntity player) { return this.inventory.canPlayerUse(player); }
+    public void clear() {this.inventory.clear();}
     @Inject(method="<init>(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)V", at=@At("TAIL"))
     private void init_stacks(CallbackInfo info) {
+        this.inventory = new BundleInventory() {
+            @Override
+            public List<ItemStack> getStacks() {
+                return BundlePotBlockEntity.this.stacks;
+            }
+
+            @Override
+            public BlockEntity asBlockEntity() {
+                return BundlePotBlockEntity.this;
+            }
+
+            @Override
+            public void writeNbt(NbtCompound nbt) { BundlePotBlockEntity.this.writeNbt(nbt);}
+        };
         this.stacks = new ArrayList<>();
     }
     private BundlePotBlockEntity() {
@@ -56,30 +83,6 @@ public class BundlePotBlockEntity
         }
 
     }
-    public boolean isAddable(ItemStack stack) {
-        NbtCompound nbt = new NbtCompound();
-        this.writeNbt(nbt);
-        int potSize = BundlePotCalculator.getTotalContentSize(nbt);
-        int itemSize = BundlePotCalculator.getResultingItemSize(stack);
-        int space = 64 - potSize - itemSize;
-        return space >= 0;
-    }
-    public void addItem(ItemStack stack) {
-        if (!this.isAddable(stack)) {
-            return;
-        } else {
-            Optional<ItemStack> optional = this.canMergeStack(stack);
-            if (optional.isPresent()) {
-                ItemStack preexistingStack = optional.get();
-                preexistingStack.increment(stack.getCount());
-            } else {
-                this.stacks.add(stack);
-            }
-        }
-    }
-    public void readNbt(NbtCompound nbt) {
-        super.readNbt(nbt);
-        this.sherds = DecoratedPotBlockEntity.Sherds.fromNbt(nbt);
         if (!this.readLootTable(nbt)) {
             this.stacks = new ArrayList<>(BundlePotCalculator.getStacksFromNbt(nbt));
         }
@@ -101,29 +104,13 @@ public class BundlePotBlockEntity
         info.setReturnValue(stack);
     }
     // all following methods are scraped from bundle and what I don't find good is deleted
-    @Override
-    public ArrayList<ItemStack> getStacks() {
+    public List<ItemStack> getStacks() {
         return this.stacks;
     }
 
-
-    private Optional<ItemStack> canMergeStack(ItemStack newStack) {
-        return this.stacks.stream().filter((item) -> {
-            return ItemStack.canCombine(item, newStack);
-        }).findFirst();
+    public BlockEntity asBlockEntity() {
+        return this;
     }
 
-    @Shadow public ItemStack getStack() {
-        return null;
-    }
-
-    @Shadow public ItemStack decreaseStack(int count) {
-        return null;
-    }
-
-    @Shadow public void setStack(ItemStack stack) { }
-    @Shadow public BlockEntity asBlockEntity() {
-        return null;
-    }
 }
 

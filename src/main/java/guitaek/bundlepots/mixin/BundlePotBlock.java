@@ -11,7 +11,6 @@ import net.minecraft.block.entity.DecoratedPotBlockEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.loot.context.LootContextParameterSet;
 import net.minecraft.loot.context.LootContextParameters;
@@ -49,15 +48,15 @@ public class BundlePotBlock extends BlockWithEntity implements Waterloggable {
         if (!(entity instanceof DecoratedPotBlockEntity decoratedPotBlockEntity)) {
             return ActionResult.PASS;
         } else {
-            IBundlePotBlockEntity bundlePotBlockEntity = (IBundlePotBlockEntity) (Object) decoratedPotBlockEntity;
+            BundleInventory bundleInventory = (BundleInventory) (Object) decoratedPotBlockEntity;
             ItemStack itemStack = player.getStackInHand(hand);
             if (!itemStack.isEmpty() && bundlePotBlockEntity.isAddable(itemStack)) {
                 decoratedPotBlockEntity.wobble(DecoratedPotBlockEntity.WobbleType.POSITIVE);
                 player.incrementStat(Stats.USED.getOrCreateStat(itemStack.getItem()));
                 ItemStack toGive = player.isCreative() ? itemStack.copyWithCount(1) : itemStack.split(1);
-                bundlePotBlockEntity.addItem(toGive);
+                bundleInventory.addItem(toGive);
                 NbtCompound nbt = new NbtCompound();
-                bundlePotBlockEntity.writeNbt(nbt);
+                bundleInventory.writeNbt(nbt);
                 float pitch = (float) BundlePotCalculator.getTotalContentSize(nbt) / 64;
 
                 world.playSound((PlayerEntity)null, pos, SoundEvents.BLOCK_DECORATED_POT_INSERT, SoundCategory.BLOCKS, 1.0F, 0.7F + 0.5F * pitch);
@@ -98,7 +97,7 @@ public class BundlePotBlock extends BlockWithEntity implements Waterloggable {
                 DecoratedPotBlockEntity decoratedPotBlockEntity = (DecoratedPotBlockEntity)blockEntity;
                 ItemStack itemStack = DecoratedPotBlockEntity.getStackWith(decoratedPotBlockEntity.getSherds());;
                 NbtCompound nbt = new NbtCompound();
-                bundlePotBlockEntity.writeNbt(nbt);
+                bundleInventory.writeNbt(nbt);
                 BlockItem.setBlockEntityNbt(itemStack, BlockEntityType.DECORATED_POT, nbt);
                 customDrops.add(itemStack);
                 ci.setReturnValue(customDrops);
@@ -106,7 +105,6 @@ public class BundlePotBlock extends BlockWithEntity implements Waterloggable {
             }
         }
     }
-    //*
     @Inject(at = @At("TAIL"), method = "onPlaced")
     public void onPlacedTail(World world, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack itemStack, CallbackInfo info) {
         if (!world.isClient) {
@@ -115,7 +113,6 @@ public class BundlePotBlock extends BlockWithEntity implements Waterloggable {
             });
         }
     }
-    // */
     @Shadow
     protected MapCodec<? extends BlockWithEntity> getCodec() {
         return null;
