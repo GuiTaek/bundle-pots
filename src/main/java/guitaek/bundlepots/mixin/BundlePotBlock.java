@@ -25,6 +25,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.ItemScatterer;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.event.GameEvent;
 import org.jetbrains.annotations.Nullable;
@@ -121,6 +122,14 @@ public class BundlePotBlock extends BlockWithEntity implements Waterloggable {
                 blockEntity.readNbtFromStack(itemStack);
             });
         }
+    }
+    @Inject(at = @At("RETURN"), method = "getComparatorOutput", cancellable = true)
+    public void getComparatorOutputReturn(BlockState state, World world, BlockPos pos, CallbackInfoReturnable<Integer> ci) {
+        int contentSize = ((BundleInventory)world.getBlockEntity(pos)).contentSize();
+        // scraped from net.minecraft.screen.ScreenHandler.calculateComparatorOutput(@Nullable Inventory inventory)
+        float f = (float)contentSize / (float)64;
+        int result = MathHelper.lerpPositive(f, 0, 15);
+        ci.setReturnValue(result);
     }
     @Shadow
     protected MapCodec<? extends BlockWithEntity> getCodec() {
