@@ -17,9 +17,6 @@
 	"entrypoints": {
 		"main": [
 			"guitaek.bundlepots.BundlePots"
-		],
-		"fabric-datagen": [
-			"guitaek.bundlepots.BundlePotsDataGenerator"
 		]
 	},
 	"mixins": [
