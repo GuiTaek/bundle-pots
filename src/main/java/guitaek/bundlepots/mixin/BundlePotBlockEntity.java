@@ -58,7 +58,7 @@ public class BundlePotBlockEntity
             }
 
             @Override
-            public void writeNbt(NbtCompound nbt) { BundlePotBlockEntity.this.writeNbt(nbt);}
+            public void writeToNbt(NbtCompound nbt) { BundlePotBlockEntity.this.writeToNbt(nbt); }
         };
         this.stacks = new ArrayList<>();
     }
@@ -72,7 +72,14 @@ public class BundlePotBlockEntity
     @Shadow public void setLootTableId(@Nullable Identifier lootTableId) { }
     @Shadow public long getLootTableSeed() { return 0; }
     @Shadow public void setLootTableSeed(long lootTableSeed) { }
-    @Shadow public void writeNbt(NbtCompound nbt) { }
+    @Shadow protected void writeNbt(NbtCompound nbt) { }
+
+    // should be an invoker, unfortunately according to https://github.com/SpongePowered/Mixin/issues/399
+    // it doesn't seem to be possible to have two Invokes and I guess an invoke and an inject
+    // also counts. Fortunately, I'm not dependent on using invokes
+    public void writeToNbt(NbtCompound nbt) {
+        this.writeNbt(nbt);
+    }
     @Inject(method = "writeNbt", at = @At("TAIL"))
     public void writeNbtTail(NbtCompound nbt, CallbackInfo info) {
         if (!this.writeLootTable(nbt) && !this.stacks.isEmpty()) {
@@ -104,7 +111,7 @@ public class BundlePotBlockEntity
     public void asStackReturn(CallbackInfoReturnable<ItemStack> info) {
         ItemStack stack = info.getReturnValue();
         NbtCompound nbt = new NbtCompound();
-        this.writeNbt(nbt);
+        this.writeToNbt(nbt);
         BlockItem.setBlockEntityNbt(stack, BlockEntityType.DECORATED_POT, nbt);
         info.setReturnValue(stack);
     }

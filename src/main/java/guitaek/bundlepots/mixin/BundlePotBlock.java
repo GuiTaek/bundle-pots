@@ -72,7 +72,7 @@ public class BundlePotBlock extends BlockWithEntity implements Waterloggable {
                 if (bundleInventory.isAddable(toGive)) {
                     bundleInventory.addItem(toGive);
                     NbtCompound nbt = new NbtCompound();
-                    bundleInventory.writeNbt(nbt);
+                    bundleInventory.writeToNbt(nbt);
                     float pitch = (float) BundlePotCalculator.getTotalContentSize(nbt) / 64;
                     this.showSuccess(world, pos, pitch);
                     world.updateComparators(pos, this);
@@ -107,7 +107,7 @@ public class BundlePotBlock extends BlockWithEntity implements Waterloggable {
                 DecoratedPotBlockEntity decoratedPotBlockEntity = (DecoratedPotBlockEntity)blockEntity;
                 ItemStack itemStack = DecoratedPotBlockEntity.getStackWith(decoratedPotBlockEntity.getSherds());;
                 NbtCompound nbt = new NbtCompound();
-                bundleInventory.writeNbt(nbt);
+                bundleInventory.writeToNbt(nbt);
                 BlockItem.setBlockEntityNbt(itemStack, BlockEntityType.DECORATED_POT, nbt);
                 customDrops.add(itemStack);
                 ci.setReturnValue(customDrops);

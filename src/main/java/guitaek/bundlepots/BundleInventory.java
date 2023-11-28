@@ -20,7 +20,7 @@ public interface BundleInventory extends Inventory {
 
     default int contentSize() {
         NbtCompound nbt = new NbtCompound();
-        this.writeNbt(nbt);
+        this.writeToNbt(nbt);
         return BundlePotCalculator.getTotalContentSize(nbt);
     }
 
@@ -100,11 +100,15 @@ public interface BundleInventory extends Inventory {
         return false;
     }
 
-    void writeNbt(NbtCompound nbt);
+    // has to be named differently than in target class,
+    // see https://fabricmc.net/wiki/tutorial:mixin_accessors, the comment
+    // in BundlePotBlockEntity.writeToNbt and the commit message
+    // that introduced this comment
+    void writeToNbt(NbtCompound nbt);
 
     default boolean isAddable(ItemStack stack) {
         NbtCompound nbt = new NbtCompound();
-        this.writeNbt(nbt);
+        this.writeToNbt(nbt);
         int potSize = BundlePotCalculator.getTotalContentSize(nbt);
         int itemSize = BundlePotCalculator.getResultingItemSize(stack);
         int space = 64 - potSize - itemSize;
