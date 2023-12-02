@@ -63,6 +63,9 @@ public class BundlePotBlock extends BlockWithEntity implements Waterloggable {
         if (!(entity instanceof DecoratedPotBlockEntity decoratedPotBlockEntity)) {
             return ActionResult.PASS;
         } else {
+            if (world.isClient) {
+                return ActionResult.CONSUME;
+            }
             BundleInventory bundleInventory = (BundleInventory) (Object) decoratedPotBlockEntity;
             ItemStack itemStack = player.getStackInHand(hand);
             if (!itemStack.isEmpty()) {
