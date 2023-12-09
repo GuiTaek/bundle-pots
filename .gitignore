@@ -23,3 +23,11 @@ run
 
 # Files from Forge MDK
 forge*changelog.txt
+
+# old gitignore
+classes/
+*.class
+gradle
+
+# own .gitignore
+*.log
