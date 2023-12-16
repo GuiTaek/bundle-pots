@@ -1,30 +1,29 @@
 package guitaek.bundlepots;
 
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public interface BundleInventory extends Inventory {
+public interface BundleInventory extends Container {
     List<ItemStack> getStacks();
 
     BlockEntity asBlockEntity();
 
     default int contentSize() {
-        NbtCompound nbt = new NbtCompound();
+        CompoundTag nbt = new CompoundTag();
         this.writeToNbt(nbt);
         return BundlePotCalculator.getTotalContentSize(nbt);
     }
 
-    default int size() {
+    @Override
+    default int getContainerSize() {
         // "size is artificial, but technically 64
         return 64;
     }
@@ -34,11 +33,11 @@ public interface BundleInventory extends Inventory {
     }
 
     @Override
-    default boolean isValid(int slot, ItemStack stack) {
+    default boolean canPlaceItem(int slot, ItemStack stack) {
         return this.isAddable(stack);
     }
     @Override
-    default ItemStack getStack(int slot) {
+    default ItemStack getItem(int slot) {
         if (this.getStacks().size() <= slot) {
             return ItemStack.EMPTY;
         }
@@ -50,7 +49,7 @@ public interface BundleInventory extends Inventory {
     }
 
     @Override
-    default ItemStack removeStack(int slot, int amount) {
+    default ItemStack removeItem(int slot, int amount) {
         if (slot >= this.getStacks().size()) {
             return null;
         }
@@ -58,7 +57,7 @@ public interface BundleInventory extends Inventory {
         if (count < amount) {
             throw new IllegalArgumentException("shall not happen, else issue a bug");
         } else {
-            ItemStack stack = this.getStack(slot);
+            ItemStack stack = this.getItem(slot);
             if (count == amount) {
                 this.getStacks().remove(slot);
                 return stack;
@@ -68,7 +67,7 @@ public interface BundleInventory extends Inventory {
     }
 
     @Override
-    default ItemStack removeStack(int slot) {
+    default ItemStack removeItemNoUpdate(int slot) {
         if (slot >= this.getStacks().size()) {
             return null;
         }
@@ -78,7 +77,7 @@ public interface BundleInventory extends Inventory {
     }
 
     @Override
-    default void setStack(int slot, ItemStack stack) {
+    default void setItem(int slot, ItemStack stack) {
         int currSize =this.getStacks().size();
         if (currSize <= slot) {
             // justification for the number of elements: when currSize == slot, we need
@@ -89,25 +88,29 @@ public interface BundleInventory extends Inventory {
     }
 
     @Override
-    default void markDirty() {
-        this.asBlockEntity().markDirty();
+    default void setChanged() {
+        this.asBlockEntity().setChanged();
     }
 
-    default void clear() {
+    @Override
+    default void clearContent() {
         this.getStacks().clear();
     }
-    default boolean canPlayerUse(PlayerEntity player) {
+
+    @Override
+    default boolean stillValid(Player player) {
         return false;
     }
 
+    // was implemented in the fabric version, therefore the following comment
     // has to be named differently than in target class,
     // see https://fabricmc.net/wiki/tutorial:mixin_accessors, the comment
     // in BundlePotBlockEntity.writeToNbt and the commit message
     // that introduced this comment
-    void writeToNbt(NbtCompound nbt);
+    void writeToNbt(CompoundTag nbt);
 
     default boolean isAddable(ItemStack stack) {
-        NbtCompound nbt = new NbtCompound();
+        CompoundTag nbt = new CompoundTag();
         this.writeToNbt(nbt);
         int potSize = BundlePotCalculator.getTotalContentSize(nbt);
         int itemSize = BundlePotCalculator.getResultingItemSize(stack);
@@ -121,7 +124,7 @@ public interface BundleInventory extends Inventory {
             Optional<ItemStack> optional = this.canMergeStack(stack);
             if (optional.isPresent()) {
                 ItemStack preexistingStack = optional.get();
-                preexistingStack.increment(stack.getCount());
+                preexistingStack.grow(stack.getCount());
             } else {
                 this.getStacks().add(stack);
             }
@@ -131,7 +134,7 @@ public interface BundleInventory extends Inventory {
 
     default Optional<ItemStack> canMergeStack(ItemStack newStack) {
         return this.getStacks().stream().filter((item) ->
-            ItemStack.canCombine(item, newStack)
+                ItemStack.isSameItemSameTags(item, newStack)
         ).findFirst();
     }
 }

@@ -4,17 +4,18 @@ import guitaek.bundlepots.BundleInventory;
 import guitaek.bundlepots.BundlePotCalculator;
 import guitaek.bundlepots.BundlePots;
 import guitaek.bundlepots.access.IBundlePotBlockEntity;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.block.entity.DecoratedPotBlockEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.LootableInventory;
-import net.minecraft.inventory.SingleStackInventory;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.util.Identifier;
+
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.entity.DecoratedPotBlockEntity;
+import net.minecraft.world.RandomizableContainer;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.ResourceLocation;
+
 import org.apache.commons.compress.harmony.pack200.NewAttributeBands;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -33,18 +34,18 @@ import java.util.logging.Logger;
 @Mixin(DecoratedPotBlockEntity.class)
 public class BundlePotBlockEntity
         extends BlockEntity
-        implements LootableInventory, BundleInventory {
+        implements RandomizableContainer, BundleInventory {
 
     private BundleInventory inventory;
-    public int size() { return this.inventory.size(); }
+    public int size() { return this.inventory.getContainerSize(); }
     public boolean isEmpty() { return this.inventory.isEmpty(); }
-    public ItemStack getStack(int slot) { return this.inventory.getStack(slot); }
-    public ItemStack removeStack(int slot, int amount) { return this.inventory.removeStack(slot, amount); }
-    public ItemStack removeStack(int slot) { return this.inventory.removeStack(slot); }
-    public void setStack(int slot, ItemStack stack) { this.inventory.setStack(slot, stack); }
-    public boolean canPlayerUse(PlayerEntity player) { return this.inventory.canPlayerUse(player); }
-    public void clear() {this.inventory.clear();}
-    @Inject(method="<init>(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)V", at=@At("TAIL"))
+    public ItemStack getItem(int slot) { return this.inventory.getItem(slot); }
+    public ItemStack removeItem(int slot, int amount) { return this.inventory.removeItem(slot, amount); }
+    public ItemStack removeItemNoUpdate(int slot) { return this.inventory.removeItemNoUpdate(slot); }
+    public void setItem(int slot, ItemStack stack) { this.inventory.setItem(slot, stack); }
+    public boolean stillValid(Player player) { return this.inventory.stillValid(player); }
+    public void clearContent() {this.inventory.clearContent();}
+    @Inject(method="<init>(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V", at=@At("TAIL"))
     private void init_stacks(CallbackInfo info) {
         this.inventory = new BundleInventory() {
             @Override
@@ -58,7 +59,7 @@ public class BundlePotBlockEntity
             }
 
             @Override
-            public void writeToNbt(NbtCompound nbt) { BundlePotBlockEntity.this.writeToNbt(nbt); }
+            public void writeToNbt(CompoundTag nbt) { BundlePotBlockEntity.this.writeToNbt(nbt); }
         };
         this.stacks = new ArrayList<>();
     }
@@ -67,52 +68,52 @@ public class BundlePotBlockEntity
         throw new AssertionError("this constructor shall never be called!");
     }
     private ArrayList<ItemStack> stacks = new ArrayList<>();
-    @Shadow private DecoratedPotBlockEntity.Sherds sherds;
-    @Shadow @Nullable public Identifier getLootTableId() { return null; }
-    @Shadow public void setLootTableId(@Nullable Identifier lootTableId) { }
+    @Shadow private DecoratedPotBlockEntity.Decorations decorations;
+    @Shadow @Nullable public ResourceLocation getLootTable() { return null; }
+    @Shadow public void setLootTable(@Nullable ResourceLocation lootTableId) { }
     @Shadow public long getLootTableSeed() { return 0; }
     @Shadow public void setLootTableSeed(long lootTableSeed) { }
-    @Shadow protected void writeNbt(NbtCompound nbt) { }
+    @Shadow protected void saveAdditional(CompoundTag nbt) { }
 
     // should be an invoker, unfortunately according to https://github.com/SpongePowered/Mixin/issues/399
     // it doesn't seem to be possible to have two Invokes and I guess an invoke and an inject
     // also counts. Fortunately, I'm not dependent on using invokes
-    public void writeToNbt(NbtCompound nbt) {
-        this.writeNbt(nbt);
+    public void writeToNbt(CompoundTag nbt) {
+        this.saveAdditional(nbt);
     }
-    @Inject(method = "writeNbt", at = @At("TAIL"))
-    public void writeNbtTail(NbtCompound nbt, CallbackInfo info) {
-        if (!this.writeLootTable(nbt) && !this.stacks.isEmpty()) {
-            NbtList nbtList = new NbtList();
+    @Inject(method = "saveAdditional", at = @At("TAIL"))
+    public void writeNbtTail(CompoundTag nbt, CallbackInfo info) {
+        if (!this.trySaveLootTable(nbt) && !this.stacks.isEmpty()) {
+            ListTag nbtTag = new ListTag();
             this.stacks.forEach((stack) -> {
-                NbtCompound nbtToAdd = new NbtCompound();
-                stack.writeNbt(nbtToAdd);
-                nbtList.add(0, nbtToAdd);
+                CompoundTag nbtToAdd = new CompoundTag();
+                stack.save(nbtToAdd);
+                nbtTag.add(0, nbtToAdd);
             });
-            nbt.put("Items", nbtList);
+            nbt.put("Items", nbtTag);
         }
 
     }
-    @Inject(method = "readNbt", at = @At("TAIL"))
-    public void readNbtTail(NbtCompound nbt, CallbackInfo info) {
-        if (!this.readLootTable(nbt)) {
+    @Inject(method = "load", at = @At("TAIL"))
+    public void loadTail(CompoundTag nbt, CallbackInfo info) {
+        if (!this.tryLoadLootTable(nbt)) {
             this.stacks = new ArrayList<>(BundlePotCalculator.getStacksFromNbt(nbt));
         }
     }
 
-    @Inject(at = @At("TAIL"), method = "readNbtFromStack")
+    @Inject(at = @At("TAIL"), method = "setFromItem")
     public void readNbtFromStackTail(ItemStack stack, CallbackInfo info) {
-        if(stack.getNbt() != null) {
-            this.readNbt(BlockItem.getBlockEntityNbt(stack));
+        if(stack.getTag() != null) {
+            this.load(BlockItem.getBlockEntityData(stack));
         }
     }
 
-    @Inject(at = @At("RETURN"), method="asStack", cancellable = true)
+    @Inject(at = @At("RETURN"), method="getPotAsItem", cancellable = true)
     public void asStackReturn(CallbackInfoReturnable<ItemStack> info) {
         ItemStack stack = info.getReturnValue();
-        NbtCompound nbt = new NbtCompound();
+        CompoundTag nbt = new CompoundTag();
         this.writeToNbt(nbt);
-        BlockItem.setBlockEntityNbt(stack, BlockEntityType.DECORATED_POT, nbt);
+        BlockItem.setBlockEntityData(stack, BlockEntityType.DECORATED_POT, nbt);
         info.setReturnValue(stack);
     }
     // all following methods are scraped from bundle and what I don't find good is deleted

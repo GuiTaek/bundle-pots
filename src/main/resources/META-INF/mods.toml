@@ -15,7 +15,7 @@ issueTrackerURL="https://github.com/GuiTaek/bundle-pots/issues" #optional
 # A list of mods - how many allowed here is determined by the individual mod loader
 [[mods]] #mandatory
 # The modid of the mod
-modId="${mod_id}" #mandatory
+modId="bundlepots" #mandatory
 # The version number of the mod
 version="${mod_version}" #mandatory
 # A display name for the mod
@@ -53,9 +53,9 @@ description='''${mod_description}'''
     # AFTER - This mod is loaded AFTER the dependency
     ordering="NONE"
     # Side this dependency is applied on - BOTH, CLIENT, or SERVER
-    side="BOTH"
+    side="SERVER"
 # Here's another dependency
-[[dependencies.${mod_id}]]
+[[dependencies.bundlepots]]
     modId="minecraft"
     mandatory=true
     # This version range declares a minimum of the current minecraft version up to but not including the next major version
