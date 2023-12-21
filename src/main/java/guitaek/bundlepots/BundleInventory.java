@@ -28,6 +28,7 @@ public interface BundleInventory extends Container {
         return 64;
     }
 
+    @Override
     default boolean isEmpty() {
         return this.getStacks().isEmpty();
     }

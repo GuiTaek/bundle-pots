@@ -2,8 +2,6 @@ package guitaek.bundlepots.mixin;
 
 import guitaek.bundlepots.BundleInventory;
 import guitaek.bundlepots.BundlePotCalculator;
-import guitaek.bundlepots.BundlePots;
-import guitaek.bundlepots.access.IBundlePotBlockEntity;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
@@ -16,7 +14,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.ResourceLocation;
 
-import org.apache.commons.compress.harmony.pack200.NewAttributeBands;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -25,11 +22,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import javax.security.auth.callback.Callback;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.logging.Logger;
 
 @Mixin(DecoratedPotBlockEntity.class)
 public class BundlePotBlockEntity
@@ -37,7 +31,7 @@ public class BundlePotBlockEntity
         implements RandomizableContainer, BundleInventory {
 
     private BundleInventory inventory;
-    public int size() { return this.inventory.getContainerSize(); }
+    public int getContainerSize() { return this.inventory.getContainerSize(); }
     public boolean isEmpty() { return this.inventory.isEmpty(); }
     public ItemStack getItem(int slot) { return this.inventory.getItem(slot); }
     public ItemStack removeItem(int slot, int amount) { return this.inventory.removeItem(slot, amount); }
@@ -82,7 +76,7 @@ public class BundlePotBlockEntity
         this.saveAdditional(nbt);
     }
     @Inject(method = "saveAdditional", at = @At("TAIL"))
-    public void writeNbtTail(CompoundTag nbt, CallbackInfo info) {
+    public void saveAdditionalTail(CompoundTag nbt, CallbackInfo info) {
         if (!this.trySaveLootTable(nbt) && !this.stacks.isEmpty()) {
             ListTag nbtTag = new ListTag();
             this.stacks.forEach((stack) -> {
@@ -109,7 +103,7 @@ public class BundlePotBlockEntity
     }
 
     @Inject(at = @At("RETURN"), method="getPotAsItem", cancellable = true)
-    public void asStackReturn(CallbackInfoReturnable<ItemStack> info) {
+    public void getPotAsItemReturn(CallbackInfoReturnable<ItemStack> info) {
         ItemStack stack = info.getReturnValue();
         CompoundTag nbt = new CompoundTag();
         this.writeToNbt(nbt);
