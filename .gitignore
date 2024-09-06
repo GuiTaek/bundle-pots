@@ -40,5 +40,4 @@ replay_*.log
 *.jfr
 *.class
 run
-gradle
 
